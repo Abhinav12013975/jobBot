@@ -77,4 +77,35 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { signup, login };
+const forgotPassword = async(req, res) =>{
+  const {email, password} = req.body
+
+  try {
+     const isUserExist = await User.findOne({email}) // it will return complete object if found
+    //  console.log(isUserExist) 
+     if(!isUserExist) {
+      return res.status(400).json({message:`user does not exist`})
+     }
+      
+     if (!passwordValidation(password)) {
+      // password validation
+      return res.status(400).json({
+        msg: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
+      });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    isUserExist.password = hashedPassword;
+    await isUserExist.save();
+    res.status(200).json({ message: 'Password updated successfully' });
+
+  }
+  catch(error) {
+    console.error('Error in forgotPassword:', error.message);
+   return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports = { signup, login, forgotPassword };
